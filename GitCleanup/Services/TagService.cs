@@ -13,7 +13,10 @@ namespace GitCleanup.Services
             new List<(Area Area, Regex Pattern)>
             {
                 (Area.CORE, new Regex(@"dist_blueprints_integration\d{8}_\d")),
+                (Area.BLUEPRINTS, new Regex(@"v\d{8}_")),
+                (Area.GATEWAY_INEWS, new Regex(@"v\d{8}_")),
                 (Area.CORE, new Regex(@"v\d{8}_")),
+                (Area.CORE, new Regex(@"v\d\.\d\d?\.\d_\d{8}_\d")),
             };
 
         private void BuildGetTagsCommand(PowerShell shell, KeyValuePair<Area, string> area)
@@ -37,7 +40,7 @@ namespace GitCleanup.Services
 
                 var deleteTags = FindMatchingPowershellLines(tags, tagPatterns.Where(x => x.Area == area.Key).ToList());
                 Console.WriteLine($"Total {area.Key} Tags Count to Delete: {deleteTags.Count}");
-                WritePowershellLines(deleteTags, area);
+                //WritePowershellLines(deleteTags, area);
             }
         }
     }

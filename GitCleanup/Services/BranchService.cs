@@ -13,8 +13,14 @@ namespace GitCleanup.Services
             new List<(Area Area, Regex Pattern)>
             {
                 (Area.CORE, new Regex(@"\/feat\/")),
+                (Area.GATEWAY_INEWS, new Regex(@"\/feat\/")),
+                (Area.BLUEPRINTS, new Regex(@"\/feat\/")),
+                (Area.BLUEPRINTS, new Regex(@"\/test\/")),
+                (Area.BLUEPRINTS, new Regex(@"\/chore\/")),
+                (Area.BLUEPRINTS, new Regex(@"\/fix\/")),
                 (Area.CORE, new Regex(@"\/feature\/")),
                 (Area.CORE, new Regex(@"\/fix\/")),
+                (Area.GATEWAY_INEWS, new Regex(@"\/fix\/")),
                 (Area.CORE, new Regex(@"\/contribute\/")),
                 (Area.CORE, new Regex(@"\/dist\/")),
                 (Area.CORE, new Regex(@"\/test\/")),
@@ -42,7 +48,7 @@ namespace GitCleanup.Services
                 var deleteBranches =
                     FindMatchingPowershellLines(branches, branchPatterns.Where(x => x.Area == area.Key).ToList());
                 Console.WriteLine($"Total {area.Key} Branches Count to Delete: {deleteBranches.Count}");
-                WritePowershellLines(deleteBranches, area);
+                //WritePowershellLines(deleteBranches, area);
             }
         }
     }
