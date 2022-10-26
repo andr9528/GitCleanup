@@ -22,7 +22,6 @@ namespace GitCleanup
         private static void Main(string[] args)
         {
             ConsoleAndFileService.Init();
-            Console.WriteLine("Hello, World!");
             var program = new Program(args);
             program.Run();
             Console.ReadKey();

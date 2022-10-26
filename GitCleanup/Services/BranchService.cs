@@ -15,10 +15,12 @@ namespace GitCleanup.Services
         {
             (Area.GATEWAY_INEWS, new Regex(@"\/feat\/")),
             (Area.GATEWAY_INEWS, new Regex(@"\/fix\/")),
+            (Area.GATEWAY_INEWS, new Regex(@"\/SOF-")),
             (Area.BLUEPRINTS, new Regex(@"\/feat\/")),
             (Area.BLUEPRINTS, new Regex(@"\/test\/")),
             (Area.BLUEPRINTS, new Regex(@"\/chore\/")),
             (Area.BLUEPRINTS, new Regex(@"\/fix\/")),
+            (Area.BLUEPRINTS, new Regex(@"\/SOF-")),
             (Area.CORE, new Regex(@"\/feat\/")),
             (Area.CORE, new Regex(@"\/feature\/")),
             (Area.CORE, new Regex(@"\/fix\/")),
@@ -26,6 +28,7 @@ namespace GitCleanup.Services
             (Area.CORE, new Regex(@"\/dist\/")),
             (Area.CORE, new Regex(@"\/test\/")),
             (Area.CORE, new Regex(@"\/refactor\/")),
+            (Area.CORE, new Regex(@"\/SOF-")),
         };
 
         private void BuildGetBranchesCommand(PowerShell shell, KeyValuePair<Area, string> area)
@@ -51,33 +54,37 @@ namespace GitCleanup.Services
 
                 var branches = RunPSScript(shell);
                 Console.WriteLine($"Total {area.Key} Branches Count: {branches.Count}");
-
                 var deleteBranches =
                     FindMatchingPowershellLines(branches, branchPatterns.Where(x => x.Area == area.Key).ToList());
-                Console.WriteLine($"Total {area.Key} Branches Count to Delete: {deleteBranches.Count}");
-
-                double percentageRemoved = Math.Round((double) deleteBranches.Count / branches.Count * 100, 3);
-                Console.WriteLine($"Percentage {area.Key} Branches to be Delete: {percentageRemoved}%");
+                Console.WriteLine($"Total {area.Key} Branches to be deleted Count: {deleteBranches.Count}");
 
                 shell.Commands.Clear();
                 BuildGetUnmergedBranchesCommand(shell, area);
-
                 var unmergedBranches = RunPSScript(shell);
                 Console.WriteLine($"Total {area.Key} Branches with Unmerged changes Count: {unmergedBranches.Count}");
 
-                var deleteUnmergedBranches = deleteBranches.Where(x => unmergedBranches.Any(y =>
+                var unsafeDeleteBranches = deleteBranches.Where(x => unmergedBranches.Any(y =>
                     x.ImmediateBaseObject.ToString().Contains(y.ImmediateBaseObject.ToString().TrimStart()))).ToList();
                 Console.WriteLine(
-                    $"Total {area.Key} Branches to be deleted with unmerged changes Count: {deleteUnmergedBranches.Count}");
-
-                var safelyDeleteBranches = deleteBranches.Except(deleteUnmergedBranches).ToList();
+                    $"Total {area.Key} Branches to be deleted with unmerged changes Count: {unsafeDeleteBranches.Count}");
+                var safelyDeleteBranches = deleteBranches.Except(unsafeDeleteBranches).ToList();
                 Console.WriteLine($"Total {area.Key} Branches to be deleted with no unmerged changes Count: {safelyDeleteBranches.Count}");
+
+                double totalPercentageRemoved = Math.Round((double) deleteBranches.Count / branches.Count * 100, 3);
+                Console.WriteLine($"Percentage {area.Key} Branches to be Delete: {totalPercentageRemoved}%");
+                double unsafePercentageRemoved =
+                    Math.Round((double) unsafeDeleteBranches.Count / branches.Count * 100, 3);
+                Console.WriteLine($"Percentage {area.Key} unmerged Branches to be Delete: {unsafePercentageRemoved}%");
+                double safePercentageRemoved =
+                    Math.Round((double) safelyDeleteBranches.Count / branches.Count * 100, 3);
+                Console.WriteLine($"Percentage {area.Key} merged Branches to be Delete: {safePercentageRemoved}%");
 
                 //WritePowershellLines(branches, area);
                 //WritePowershellLines(deleteBranches, area);
                 //WritePowershellLines(unmergedBranches, area);
                 //WritePowershellLines(deleteUnmergedBranches, area);
                 WritePowershellLines(safelyDeleteBranches, area);
+                Console.WriteLine($"");
             }
         }
     }

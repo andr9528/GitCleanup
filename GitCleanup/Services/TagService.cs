@@ -44,6 +44,7 @@ namespace GitCleanup.Services
 
                 //WritePowershellLines(tags, area);
                 //WritePowershellLines(deleteTags, area);
+                Console.WriteLine($"");
             }
         }
     }
