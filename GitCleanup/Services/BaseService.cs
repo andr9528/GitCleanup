@@ -9,6 +9,7 @@ namespace GitCleanup.Services
     {
         protected void WritePowershellLines(IEnumerable<PSObject> tags, KeyValuePair<Area, string> area, string description = "")
         {
+            Console.WriteLine("");
             if (description != string.Empty) Console.WriteLine(description);
             foreach (PSObject tag in tags)
                 Console.WriteLine($"{area.Key}: {tag.ImmediateBaseObject}");
@@ -22,12 +23,12 @@ namespace GitCleanup.Services
         }
 
         protected IList<PSObject> FindMatchingPowershellLines(
-            Collection<PSObject> branches, List<(Area Area, Regex Pattern)> specifiedPatterns)
+            IEnumerable<PSObject> basePsObjects, List<(Area Area, Regex Pattern)> specifiedPatterns)
         {
             var results = new List<PSObject>();
-            var enumeratedTags = branches.ToArray();
+            var enumerated = basePsObjects.ToArray();
             foreach ((Area area, Regex? regex) in specifiedPatterns)
-                results.AddRange(enumeratedTags.Where(x => regex.IsMatch(x.ImmediateBaseObject.ToString())).ToList());
+                results.AddRange(enumerated.Where(x => regex.IsMatch(x.ImmediateBaseObject.ToString())).ToList());
             return results.Distinct().ToList();
         }
 

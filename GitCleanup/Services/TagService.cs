@@ -46,9 +46,10 @@ namespace GitCleanup.Services
                 double percentageRemoved = Math.Round((double) deleteTags.Count / tags.Count * 100, 3);
                 Console.WriteLine($"Percentage {area.Key} Tags to be Delete: {percentageRemoved}%");
 
-                //WritePowershellLines(tags, area, $"All tags for {area}.");
-                //WritePowershellLines(deleteTags, area, $"All tags for {area}, that is marked for deletion.");
-                Console.WriteLine($"");
+                //WritePowershellLines(tags, area, $"All tags for {area.Key}.");
+                //WritePowershellLines(deleteTags, area, $"All tags for {area.Key}, that is marked for deletion.");
+                Console.WriteLine(
+                    $"-----------------------------------------------------------------------------------");
             }
         }
     }

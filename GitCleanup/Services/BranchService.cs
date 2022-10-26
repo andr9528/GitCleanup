@@ -6,6 +6,15 @@ namespace GitCleanup.Services
 {
     public class BranchService : BaseService
     {
+        private enum PassAroundContent
+        {
+            ALL,
+            ALL_DELETE,
+            ALL_UNMERGED,
+            SAFE_DELETE,
+            UNSAFE_DELETE,
+        }
+
         private const string GIT_GET_ALL_REMOTE_BRANCHES =
             @"git for-each-ref --sort=creatordate --format '%(refname) %(creatordate)' refs/remotes/origin";
 
@@ -54,44 +63,83 @@ namespace GitCleanup.Services
             foreach (var area in areas)
             {
                 Console.WriteLine($"Running Branch commands for: {area.Key}");
+                var passAround = new Dictionary<PassAroundContent, IEnumerable<PSObject>>();
 
-                using var shell = PowerShell.Create();
-                BuildGetBranchesCommand(shell, area);
-
-                var branches = RunPSScript(shell);
-                Console.WriteLine($"Total {area.Key} Branches Count: {branches.Count}");
-                var deleteBranches =
-                    FindMatchingPowershellLines(branches, branchPatterns.Where(x => x.Area == area.Key).ToList());
-                Console.WriteLine($"Total {area.Key} Branches to be deleted Count: {deleteBranches.Count}");
-
-                shell.Commands.Clear();
-                BuildGetUnmergedBranchesCommand(shell, area);
-                var unmergedBranches = RunPSScript(shell);
-                Console.WriteLine($"Total {area.Key} Branches with Unmerged changes Count: {unmergedBranches.Count}");
-
-                var unsafeDeleteBranches = deleteBranches.Where(x => unmergedBranches.Any(y =>
-                    x.ImmediateBaseObject.ToString().Contains(y.ImmediateBaseObject.ToString().TrimStart()))).ToList();
+                WriteTotals(area, passAround);
+                WritePercentages(passAround, area);
+                WriteALlLines(passAround, area);
                 Console.WriteLine(
-                    $"Total {area.Key} Branches to be deleted with unmerged changes Count: {unsafeDeleteBranches.Count}");
-                var safelyDeleteBranches = deleteBranches.Except(unsafeDeleteBranches).ToList();
-                Console.WriteLine($"Total {area.Key} Branches to be deleted with no unmerged changes Count: {safelyDeleteBranches.Count}");
-
-                double totalPercentageRemoved = Math.Round((double) deleteBranches.Count / branches.Count * 100, 3);
-                Console.WriteLine($"Percentage {area.Key} Branches to be Delete: {totalPercentageRemoved}%");
-                double unsafePercentageRemoved =
-                    Math.Round((double) unsafeDeleteBranches.Count / branches.Count * 100, 3);
-                Console.WriteLine($"Percentage {area.Key} unmerged Branches to be Delete: {unsafePercentageRemoved}%");
-                double safePercentageRemoved =
-                    Math.Round((double) safelyDeleteBranches.Count / branches.Count * 100, 3);
-                Console.WriteLine($"Percentage {area.Key} merged Branches to be Delete: {safePercentageRemoved}%");
-
-                //WritePowershellLines(branches, area, $"All branches for {area}.");
-                //WritePowershellLines(deleteBranches, area, $"All branches for {area}, that is marked for deletion.");
-                //WritePowershellLines(unmergedBranches, area, $"All branches for {area}, with unmerged changes.");
-                //WritePowershellLines(unsafeDeleteBranches, area, $"All branches for {area}, that is marked for deletion and has unmerged changes.");
-                WritePowershellLines(safelyDeleteBranches, area, $"All branches for {area}, that is marked for deletion and has no unmerged changes.");
-                Console.WriteLine($"");
+                    $"-----------------------------------------------------------------------------------");
             }
+        }
+
+        private void WriteALlLines(
+            Dictionary<PassAroundContent, IEnumerable<PSObject>> passAround, KeyValuePair<Area, string> area)
+        {
+            //WritePowershellLines(passAround[PassAroundContent.ALL], area, $"All branches for {area.Key}.");
+            //WritePowershellLines(passAround[PassAroundContent.ALL_DELETE], area,
+            //    $"All branches for {area.Key}, that is marked for deletion.");
+            //WritePowershellLines(passAround[PassAroundContent.ALL_UNMERGED], area,
+            //    $"All branches for {area.Key}, with unmerged changes.");
+            //WritePowershellLines(passAround[PassAroundContent.UNSAFE_DELETE], area,
+            //    $"All branches for {area.Key}, that is marked for deletion and has unmerged changes.");
+            WritePowershellLines(passAround[PassAroundContent.SAFE_DELETE], area,
+                $"All branches for {area.Key}, that is marked for deletion and has no unmerged changes.");
+        }
+
+        private void WriteTotals(
+            KeyValuePair<Area, string> area, Dictionary<PassAroundContent, IEnumerable<PSObject>> passAround)
+        {
+            using var shell = PowerShell.Create();
+
+            BuildGetBranchesCommand(shell, area);
+            passAround.Add(PassAroundContent.ALL, RunPSScript(shell));
+            Console.WriteLine($"Total {area.Key} Branches Count: {passAround[PassAroundContent.ALL].Count()}");
+
+            passAround.Add(PassAroundContent.ALL_DELETE,
+                FindMatchingPowershellLines(passAround[PassAroundContent.ALL],
+                    branchPatterns.Where(x => x.Area == area.Key).ToList()));
+            Console.WriteLine(
+                $"Total {area.Key} Branches to be deleted Count: {passAround[PassAroundContent.ALL_DELETE].Count()}");
+
+            shell.Commands.Clear();
+            BuildGetUnmergedBranchesCommand(shell, area);
+            passAround.Add(PassAroundContent.ALL_UNMERGED, RunPSScript(shell));
+            Console.WriteLine(
+                $"Total {area.Key} Branches with Unmerged changes Count: {passAround[PassAroundContent.ALL_UNMERGED].Count()}");
+
+            passAround.Add(PassAroundContent.UNSAFE_DELETE,
+                passAround[PassAroundContent.ALL_DELETE].Where(all =>
+                    passAround[PassAroundContent.ALL_UNMERGED].Any(unmerged =>
+                        all.ImmediateBaseObject.ToString()
+                            .Contains(unmerged.ImmediateBaseObject.ToString().TrimStart()))).ToList());
+            Console.WriteLine(
+                $"Total {area.Key} Branches to be deleted with unmerged changes Count: {passAround[PassAroundContent.UNSAFE_DELETE].Count()}");
+
+            passAround.Add(PassAroundContent.SAFE_DELETE,
+                passAround[PassAroundContent.ALL_DELETE].Except(passAround[PassAroundContent.UNSAFE_DELETE]).ToList());
+            Console.WriteLine(
+                $"Total {area.Key} Branches to be deleted with no unmerged changes Count: {passAround[PassAroundContent.SAFE_DELETE].Count()}");
+        }
+
+        private static void WritePercentages(
+            Dictionary<PassAroundContent, IEnumerable<PSObject>> passAround, KeyValuePair<Area, string> area)
+        {
+            double totalPercentageRemoved =
+                Math.Round(
+                    (double) passAround[PassAroundContent.ALL_DELETE].Count() /
+                    passAround[PassAroundContent.ALL].Count() * 100, 3);
+            Console.WriteLine($"Percentage {area.Key} Branches to be Delete: {totalPercentageRemoved}%");
+            double unsafePercentageRemoved =
+                Math.Round(
+                    (double) passAround[PassAroundContent.UNSAFE_DELETE].Count() /
+                    passAround[PassAroundContent.ALL].Count() * 100, 3);
+            Console.WriteLine($"Percentage {area.Key} unmerged Branches to be Delete: {unsafePercentageRemoved}%");
+            double safePercentageRemoved =
+                Math.Round(
+                    (double) passAround[PassAroundContent.SAFE_DELETE].Count() /
+                    passAround[PassAroundContent.ALL].Count() * 100, 3);
+            Console.WriteLine($"Percentage {area.Key} merged Branches to be Delete: {safePercentageRemoved}%");
         }
     }
 }
