@@ -35,14 +35,15 @@ namespace GitCleanup.Services
 
                 var tags = RunPSScript(shell);
                 Console.WriteLine($"Total {area.Key} Tags Count: {tags.Count}");
-                //WritePowershellLines(tags, area);
 
                 var deleteTags = FindMatchingPowershellLines(tags, tagPatterns.Where(x => x.Area == area.Key).ToList());
                 Console.WriteLine($"Total {area.Key} Tags Count to Delete: {deleteTags.Count}");
-                //WritePowershellLines(deleteTags, area);
 
                 double percentageRemoved = Math.Round((double) deleteTags.Count / tags.Count * 100, 3);
                 Console.WriteLine($"Percentage {area.Key} Tags to be Delete: {percentageRemoved}%");
+
+                //WritePowershellLines(tags, area);
+                //WritePowershellLines(deleteTags, area);
             }
         }
     }

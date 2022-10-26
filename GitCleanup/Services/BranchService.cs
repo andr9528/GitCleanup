@@ -9,7 +9,7 @@ namespace GitCleanup.Services
         private const string GIT_GET_ALL_REMOTE_BRANCHES =
             @"git for-each-ref --sort=creatordate --format '%(refname) %(creatordate)' refs/remotes/origin";
 
-        private const string GIT_GET_ALL_REMOTE_BRANCHES_WITH_UNMERGED = @"git branch --r --no-merged";
+        private const string GIT_GET_ALL_REMOTE_BRANCHES_WITH_UNMERGED = @"git branch -r --no-merged";
 
         private readonly IEnumerable<(Area Area, Regex Pattern)> branchPatterns = new List<(Area Area, Regex Pattern)>
         {
@@ -51,12 +51,10 @@ namespace GitCleanup.Services
 
                 var branches = RunPSScript(shell);
                 Console.WriteLine($"Total {area.Key} Branches Count: {branches.Count}");
-                //WritePowershellLines(branches, area);
 
                 var deleteBranches =
                     FindMatchingPowershellLines(branches, branchPatterns.Where(x => x.Area == area.Key).ToList());
                 Console.WriteLine($"Total {area.Key} Branches Count to Delete: {deleteBranches.Count}");
-                //WritePowershellLines(deleteBranches, area);
 
                 double percentageRemoved = Math.Round((double) deleteBranches.Count / branches.Count * 100, 3);
                 Console.WriteLine($"Percentage {area.Key} Branches to be Delete: {percentageRemoved}%");
@@ -67,16 +65,19 @@ namespace GitCleanup.Services
                 var unmergedBranches = RunPSScript(shell);
                 Console.WriteLine($"Total {area.Key} Branches with Unmerged changes Count: {unmergedBranches.Count}");
 
-
                 var deleteUnmergedBranches = deleteBranches.Where(x => unmergedBranches.Any(y =>
-                {
-                    bool result = x.ImmediateBaseObject.ToString().Contains(y.ImmediateBaseObject.ToString());
-                    Console.WriteLine(
-                        $"Is '{y.ImmediateBaseObject}' contained within '{x.ImmediateBaseObject}'?: {result}");
-                    return result;
-                })).ToList();
+                    x.ImmediateBaseObject.ToString().Contains(y.ImmediateBaseObject.ToString().TrimStart()))).ToList();
                 Console.WriteLine(
-                    $"Total {area.Key} Branches to be deleted with Unmerged changes Count: {deleteUnmergedBranches.Count}");
+                    $"Total {area.Key} Branches to be deleted with unmerged changes Count: {deleteUnmergedBranches.Count}");
+
+                var safelyDeleteBranches = deleteBranches.Except(deleteUnmergedBranches).ToList();
+                Console.WriteLine($"Total {area.Key} Branches to be deleted with no unmerged changes Count: {safelyDeleteBranches.Count}");
+
+                //WritePowershellLines(branches, area);
+                //WritePowershellLines(deleteBranches, area);
+                //WritePowershellLines(unmergedBranches, area);
+                //WritePowershellLines(deleteUnmergedBranches, area);
+                WritePowershellLines(safelyDeleteBranches, area);
             }
         }
     }
