@@ -7,18 +7,18 @@ namespace GitCleanup.Services
 {
     public abstract class BaseService
     {
-        protected void WritePowershellLines(IEnumerable<PSObject> tags, KeyValuePair<Area, string> area, string description = "")
+        protected void WritePowershellLines(IEnumerable<PSObject> tags, KeyValuePair<Area, string> area, string description = "", bool applySpacing = true)
         {
-            Console.WriteLine("");
+            if (applySpacing) Console.WriteLine("");
             if (description != string.Empty) Console.WriteLine(description);
             foreach (PSObject tag in tags)
-                Console.WriteLine($"{area.Key}: {tag.ImmediateBaseObject}");
+                Console.WriteLine($"{area.Key}: {tag.ImmediateBaseObject.ToString().Trim()}");
         }
 
-        protected Collection<PSObject> RunPSScript(PowerShell shell)
+        protected Collection<PSObject> RunPSScript(PowerShell shell, bool checkErrors = true)
         {
             var result = shell.Invoke();
-            CheckForErrors(shell);
+            if (checkErrors) CheckForErrors(shell);
             return result;
         }
 

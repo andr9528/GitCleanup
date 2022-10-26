@@ -6,21 +6,22 @@ namespace GitCleanup.Services
 {
     public class TagService : BaseService
     {
+        private readonly bool shouldAllowDelete;
+        private readonly bool shouldCreatePullRequests;
+
         private const string GIT_GET_ALL_TAGS =
             "git for-each-ref --sort=creatordate --format '%(refname) %(creatordate)' refs/tags";
 
         private readonly IEnumerable<(Area Area, Regex Pattern)> tagPatterns = new List<(Area Area, Regex Pattern)>
         {
-            (Area.BLUEPRINTS, new Regex(@"v\d{8}")),
-            (Area.GATEWAY_INEWS, new Regex(@"v\d{8}")),
-            (Area.CORE, new Regex(@"v\d{8}")),
-            (Area.CORE, new Regex(@"dist_blueprints_integration\d{8}_\d")),
-            (Area.CORE, new Regex(@"v\d\.\d\d?\.\d_\d{8}_\d")),
-            (Area.TSR, new Regex(@"dist-test\/")),
-            (Area.TSR, new Regex(@"dist_types\d{8}")),
-            (Area.TSR, new Regex(@"dist\d{8}")),
-            (Area.TSR, new Regex(@"v\d{8}")),
+            
         };
+
+        public TagService(bool shouldAllowDelete, bool shouldCreatePullRequests)
+        {
+            this.shouldAllowDelete = shouldAllowDelete;
+            this.shouldCreatePullRequests = shouldCreatePullRequests;
+        }
 
         private void BuildGetTagsCommand(PowerShell shell, KeyValuePair<Area, string> area)
         {
