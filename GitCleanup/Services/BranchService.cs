@@ -67,10 +67,16 @@ namespace GitCleanup.Services
                 var unmergedBranches = RunPSScript(shell);
                 Console.WriteLine($"Total {area.Key} Branches with Unmerged changes Count: {unmergedBranches.Count}");
 
-                var deleteUnmergedBranches = deleteBranches.Where(x =>
-                    unmergedBranches.Any(y =>
-                        x.ImmediateBaseObject.ToString().Contains(y.ImmediateBaseObject.ToString()))).ToList();
-                Console.WriteLine($"Total {area.Key} Branches to be deleted with Unmerged changes Count: {deleteUnmergedBranches.Count}");
+
+                var deleteUnmergedBranches = deleteBranches.Where(x => unmergedBranches.Any(y =>
+                {
+                    bool result = x.ImmediateBaseObject.ToString().Contains(y.ImmediateBaseObject.ToString());
+                    Console.WriteLine(
+                        $"Is '{y.ImmediateBaseObject}' contained within '{x.ImmediateBaseObject}'?: {result}");
+                    return result;
+                })).ToList();
+                Console.WriteLine(
+                    $"Total {area.Key} Branches to be deleted with Unmerged changes Count: {deleteUnmergedBranches.Count}");
             }
         }
     }

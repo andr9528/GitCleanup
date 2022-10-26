@@ -15,7 +15,9 @@ namespace GitCleanup.Services
 
         protected Collection<PSObject> RunPSScript(PowerShell shell)
         {
-            return shell.Invoke();
+            var result = shell.Invoke();
+            CheckForErrors(shell);
+            return result;
         }
 
         protected IList<PSObject> FindMatchingPowershellLines(
@@ -26,6 +28,19 @@ namespace GitCleanup.Services
             foreach ((Area area, Regex? regex) in specifiedPatterns)
                 results.AddRange(enumeratedTags.Where(x => regex.IsMatch(x.ImmediateBaseObject.ToString())).ToList());
             return results.Distinct().ToList();
+        }
+
+        private void CheckForErrors(PowerShell shell)
+        {
+            if (!shell.HadErrors)
+                return;
+
+            var errors = shell.Streams.Error.ReadAll();
+
+            foreach (ErrorRecord error in errors)
+            {
+                Console.WriteLine($"ERROR: {error}");
+            }
         }
     }
 }
