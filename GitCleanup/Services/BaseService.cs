@@ -7,8 +7,9 @@ namespace GitCleanup.Services
 {
     public abstract class BaseService
     {
-        protected void WritePowershellLines(IEnumerable<PSObject> tags, KeyValuePair<Area, string> area)
+        protected void WritePowershellLines(IEnumerable<PSObject> tags, KeyValuePair<Area, string> area, string description = "")
         {
+            if (description != string.Empty) Console.WriteLine(description);
             foreach (PSObject tag in tags)
                 Console.WriteLine($"{area.Key}: {tag.ImmediateBaseObject}");
         }

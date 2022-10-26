@@ -11,11 +11,15 @@ namespace GitCleanup.Services
 
         private readonly IEnumerable<(Area Area, Regex Pattern)> tagPatterns = new List<(Area Area, Regex Pattern)>
         {
-            (Area.BLUEPRINTS, new Regex(@"v\d{8}_")),
-            (Area.GATEWAY_INEWS, new Regex(@"v\d{8}_")),
-            (Area.CORE, new Regex(@"v\d{8}_")),
+            (Area.BLUEPRINTS, new Regex(@"v\d{8}")),
+            (Area.GATEWAY_INEWS, new Regex(@"v\d{8}")),
+            (Area.CORE, new Regex(@"v\d{8}")),
             (Area.CORE, new Regex(@"dist_blueprints_integration\d{8}_\d")),
             (Area.CORE, new Regex(@"v\d\.\d\d?\.\d_\d{8}_\d")),
+            (Area.TSR, new Regex(@"dist-test\/")),
+            (Area.TSR, new Regex(@"dist_types\d{8}")),
+            (Area.TSR, new Regex(@"dist\d{8}")),
+            (Area.TSR, new Regex(@"v\d{8}")),
         };
 
         private void BuildGetTagsCommand(PowerShell shell, KeyValuePair<Area, string> area)
@@ -42,8 +46,8 @@ namespace GitCleanup.Services
                 double percentageRemoved = Math.Round((double) deleteTags.Count / tags.Count * 100, 3);
                 Console.WriteLine($"Percentage {area.Key} Tags to be Delete: {percentageRemoved}%");
 
-                //WritePowershellLines(tags, area);
-                //WritePowershellLines(deleteTags, area);
+                //WritePowershellLines(tags, area, $"All tags for {area}.");
+                //WritePowershellLines(deleteTags, area, $"All tags for {area}, that is marked for deletion.");
                 Console.WriteLine($"");
             }
         }

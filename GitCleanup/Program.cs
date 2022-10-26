@@ -12,6 +12,7 @@ namespace GitCleanup
             {Area.CORE, @"C:\Code\Tv2\tv-automation-server-core"},
             {Area.GATEWAY_INEWS, @"C:\Code\Tv2\inews-ftp-gateway"},
             {Area.BLUEPRINTS, @"C:\Code\Tv2\sofie-blueprints-inews"},
+            {Area.TSR, @"C:\Code\Tv2\tv-automation-state-timeline-resolver"},
         };
 
         private Program(string[] args)

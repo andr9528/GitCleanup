@@ -5,5 +5,6 @@
         CORE,
         GATEWAY_INEWS,
         BLUEPRINTS,
+        TSR,
     }
 }

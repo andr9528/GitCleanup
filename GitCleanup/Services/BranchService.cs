@@ -29,6 +29,12 @@ namespace GitCleanup.Services
             (Area.CORE, new Regex(@"\/test\/")),
             (Area.CORE, new Regex(@"\/refactor\/")),
             (Area.CORE, new Regex(@"\/SOF-")),
+            (Area.TSR, new Regex(@"\/feat\/")),
+            (Area.TSR, new Regex(@"\/feature\/")),
+            (Area.TSR, new Regex(@"\/fix\/")),
+            (Area.TSR, new Regex(@"\/test\/")),
+            (Area.TSR, new Regex(@"\/hotfix\/")),
+            (Area.TSR, new Regex(@"\/contribute\/")),
         };
 
         private void BuildGetBranchesCommand(PowerShell shell, KeyValuePair<Area, string> area)
@@ -79,11 +85,11 @@ namespace GitCleanup.Services
                     Math.Round((double) safelyDeleteBranches.Count / branches.Count * 100, 3);
                 Console.WriteLine($"Percentage {area.Key} merged Branches to be Delete: {safePercentageRemoved}%");
 
-                //WritePowershellLines(branches, area);
-                //WritePowershellLines(deleteBranches, area);
-                //WritePowershellLines(unmergedBranches, area);
-                //WritePowershellLines(deleteUnmergedBranches, area);
-                WritePowershellLines(safelyDeleteBranches, area);
+                //WritePowershellLines(branches, area, $"All branches for {area}.");
+                //WritePowershellLines(deleteBranches, area, $"All branches for {area}, that is marked for deletion.");
+                //WritePowershellLines(unmergedBranches, area, $"All branches for {area}, with unmerged changes.");
+                //WritePowershellLines(unsafeDeleteBranches, area, $"All branches for {area}, that is marked for deletion and has unmerged changes.");
+                WritePowershellLines(safelyDeleteBranches, area, $"All branches for {area}, that is marked for deletion and has no unmerged changes.");
                 Console.WriteLine($"");
             }
         }
