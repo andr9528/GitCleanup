@@ -7,7 +7,7 @@ namespace GitCleanup
     {
         public const string GIT_FETCH_ALL = @"git fetch --all";
 
-        private const bool SHOULD_ALLOW_DELETE = false;
+        private const bool SHOULD_ALLOW_DELETE = true;
         private const bool SHOULD_CREATE_PULL_REQUEST = false;
 
         private readonly Dictionary<Area, string> areas = new()
@@ -32,7 +32,7 @@ namespace GitCleanup
 
         private void Run()
         {
-            var tag = new TagService(SHOULD_ALLOW_DELETE, SHOULD_CREATE_PULL_REQUEST);
+            var tag = new TagService(SHOULD_ALLOW_DELETE);
             var branch = new BranchService(SHOULD_ALLOW_DELETE, SHOULD_CREATE_PULL_REQUEST);
 
             tag.WriteTags(areas);

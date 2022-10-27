@@ -8,7 +8,7 @@ namespace GitCleanup.Services
     public class BranchService : BaseService
     {
         private const string GIT_GET_ALL_REMOTE_BRANCHES =
-            @"git for-each-ref --sort=committerdate --format '%(refname)|%(creatordate)|%(committerdate)|%(creator)' refs/remotes/origin";
+            @"git for-each-ref --sort=committerdate --format '%(refname)|%(creatordate:iso8601)|%(creator)' refs/remotes/origin";
 
         private const string GIT_GET_ALL_REMOTE_BRANCHES_WITH_UNMERGED = @"git branch -r --no-merged";
         private const string GIT_DELETE_REMOTE_BRANCH_BASE = @"git push origin --delete ";
@@ -37,7 +37,7 @@ namespace GitCleanup.Services
 
                 WriteTotals(area, passAround);
                 WritePercentages(passAround, area);
-                WriteALlLines(passAround, area);
+                WriteAllLines(passAround, area);
                 ProcessBranches(passAround, area);
                 Console.WriteLine(
                     "-----------------------------------------------------------------------------------");
@@ -114,16 +114,16 @@ namespace GitCleanup.Services
             }
         }
 
-        private void WriteALlLines(
+        private void WriteAllLines(
             Dictionary<PassAroundContent, IEnumerable<PSObject>> passAround, KeyValuePair<Area, string> area)
         {
-            WritePowershellLines(passAround[PassAroundContent.ALL], area, $"All branches for {area.Key}.");
-            WritePowershellLines(passAround[PassAroundContent.ALL_DELETE], area,
-                $"All branches for {area.Key}, that is marked for deletion.");
-            WritePowershellLines(passAround[PassAroundContent.ALL_UNMERGED], area,
-                $"All branches for {area.Key}, with unmerged changes.");
-            WritePowershellLines(passAround[PassAroundContent.UNSAFE_DELETE], area,
-                $"All branches for {area.Key}, that is marked for deletion and has unmerged changes.");
+            //WritePowershellLines(passAround[PassAroundContent.ALL], area, $"All branches for {area.Key}.");
+            //WritePowershellLines(passAround[PassAroundContent.ALL_DELETE], area,
+            //    $"All branches for {area.Key}, that is marked for deletion.");
+            //WritePowershellLines(passAround[PassAroundContent.ALL_UNMERGED], area,
+            //    $"All branches for {area.Key}, with unmerged changes.");
+            //WritePowershellLines(passAround[PassAroundContent.UNSAFE_DELETE], area,
+            //    $"All branches for {area.Key}, that is marked for deletion and has unmerged changes.");
             WritePowershellLines(passAround[PassAroundContent.SAFE_DELETE], area,
                 $"All branches for {area.Key}, that is marked for deletion and has no unmerged changes.");
         }
@@ -171,8 +171,8 @@ namespace GitCleanup.Services
             passAround.Add(PassAroundContent.UNSAFE_DELETE,
                 passAround[PassAroundContent.ALL_DELETE].Where(all =>
                     passAround[PassAroundContent.ALL_UNMERGED].Any(unmerged =>
-                        all.ImmediateBaseObject.ToString()!
-                            .Contains(unmerged.ImmediateBaseObject.ToString()!.TrimStart()))).ToList());
+                        all.ImmediateBaseObject.ToString()!.Contains(
+                            unmerged.ImmediateBaseObject.ToString()!.TrimStart()))).ToList());
             Console.WriteLine(
                 $"Total {area.Key} Branches to be deleted with unmerged changes Count: {passAround[PassAroundContent.UNSAFE_DELETE].Count()}");
 
