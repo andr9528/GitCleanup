@@ -7,12 +7,15 @@ namespace GitCleanup
     {
         public const string GIT_FETCH_ALL = @"git fetch --all";
 
-        private const bool SHOULD_ALLOW_DELETE = true;
+        private const bool SHOULD_ALLOW_DELETE = false;
         private const bool SHOULD_CREATE_PULL_REQUEST = false;
 
         private readonly Dictionary<Area, string> areas = new()
         {
-            {Area.ACTION, @"C:\Code\Personal\GithubActionsTests"},
+            {Area.CORE, @"C:\Code\Tv2\tv-automation-server-core"},
+            {Area.GATEWAY_INEWS, @"C:\Code\Tv2\inews-ftp-gateway"},
+            {Area.BLUEPRINTS, @"C:\Code\Tv2\sofie-blueprints-inews"},
+            {Area.TSR, @"C:\Code\Tv2\tv-automation-state-timeline-resolver"},
         };
 
         private readonly string[] args;
