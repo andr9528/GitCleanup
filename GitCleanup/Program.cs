@@ -8,13 +8,14 @@ namespace GitCleanup
         public const string GIT_FETCH_ALL = @"git fetch --all";
 
         private const bool SHOULD_ALLOW_DELETE = false;
-        private const bool SHOULD_CREATE_PULL_REQUEST = true;
-        private readonly string[] args;
+        private const bool SHOULD_CREATE_PULL_REQUEST = false;
 
         private readonly Dictionary<Area, string> areas = new()
         {
             {Area.ACTION, @"C:\Code\Personal\GithubActionsTests"},
         };
+
+        private readonly string[] args;
 
         private Program(string[] args)
         {

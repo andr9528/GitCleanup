@@ -6,27 +6,18 @@ namespace GitCleanup.Services
 {
     public class TagService : BaseService
     {
+        private const string GIT_GET_ALL_TAGS =
+            "git for-each-ref --sort=committerdate --format '%(refname)|%(creatordate)|%(committerdate)|%(creator)' refs/tags";
+
         private readonly bool shouldAllowDelete;
         private readonly bool shouldCreatePullRequests;
 
-        private const string GIT_GET_ALL_TAGS =
-            "git for-each-ref --sort=creatordate --format '%(refname) %(creatordate)' refs/tags";
-
-        private readonly IEnumerable<(Area Area, Regex Pattern)> tagPatterns = new List<(Area Area, Regex Pattern)>
-        {
-            
-        };
+        private readonly IEnumerable<(Area Area, Regex Pattern)> tagPatterns = new List<(Area Area, Regex Pattern)>();
 
         public TagService(bool shouldAllowDelete, bool shouldCreatePullRequests)
         {
             this.shouldAllowDelete = shouldAllowDelete;
             this.shouldCreatePullRequests = shouldCreatePullRequests;
-        }
-
-        private void BuildGetTagsCommand(PowerShell shell, KeyValuePair<Area, string> area)
-        {
-            shell.AddScript($"cd {area.Value}");
-            shell.AddScript($"{GIT_GET_ALL_TAGS}");
         }
 
         public void WriteTags(Dictionary<Area, string> areas)
@@ -50,8 +41,14 @@ namespace GitCleanup.Services
                 //WritePowershellLines(tags, area, $"All tags for {area.Key}.");
                 //WritePowershellLines(deleteTags, area, $"All tags for {area.Key}, that is marked for deletion.");
                 Console.WriteLine(
-                    $"-----------------------------------------------------------------------------------");
+                    "-----------------------------------------------------------------------------------");
             }
+        }
+
+        private void BuildGetTagsCommand(PowerShell shell, KeyValuePair<Area, string> area)
+        {
+            shell.AddScript($"cd {area.Value}");
+            shell.AddScript($"{GIT_GET_ALL_TAGS}");
         }
     }
 }
