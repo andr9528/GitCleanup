@@ -81,6 +81,7 @@ namespace GitCleanup.Services
             shell.Commands.Clear();
             shell.AddScript($"cd {area.Value}");
             shell.AddScript($"{Program.GIT_FETCH_ALL}");
+            shell.AddScript($"{Program.GIT_PULL}");
             shell.AddScript($"{GIT_GET_ALL_REMOTE_BRANCHES}");
         }
 
@@ -89,6 +90,7 @@ namespace GitCleanup.Services
             shell.Commands.Clear();
             shell.AddScript($"cd {area.Value}");
             shell.AddScript($"{Program.GIT_FETCH_ALL}");
+            shell.AddScript($"{Program.GIT_PULL}");
             shell.AddScript($"{GIT_GET_ALL_REMOTE_BRANCHES_WITH_UNMERGED}");
         }
 
@@ -112,7 +114,6 @@ namespace GitCleanup.Services
             });
             using var shell = PowerShell.Create();
 
-            Console.WriteLine("");
             BuildDeleteBranchCommand(shell, area, toDelete);
             var result = RunPSScript(shell, false);
 

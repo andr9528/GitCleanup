@@ -63,6 +63,7 @@ namespace GitCleanup.Services
         {
             shell.AddScript($"cd {area.Value}");
             shell.AddScript($"{Program.GIT_FETCH_ALL}");
+            shell.AddScript($"{Program.GIT_PULL}");
             shell.AddScript($"{GIT_GET_ALL_TAGS}");
         }
 
@@ -73,7 +74,6 @@ namespace GitCleanup.Services
                 .Select(raw => raw.ImmediateBaseObject.ToString().Split('|')[0]);
             using var shell = PowerShell.Create();
 
-            Console.WriteLine("");
             BuildDeleteTagsCommand(shell, area, toDelete);
 
             var result = RunPSScript(shell, false);
@@ -90,9 +90,9 @@ namespace GitCleanup.Services
         private void WriteAllLines(
             Dictionary<PassAroundContent, IEnumerable<PSObject>> passAround, KeyValuePair<Area, string> area)
         {
-            WritePowershellLines(passAround[PassAroundContent.ALL], area, $"All tags for {area.Key}.");
-            WritePowershellLines(passAround[PassAroundContent.ALL_DELETE], area,
-                $"All tags for {area.Key}, that is marked for deletion.");
+            //WritePowershellLines(passAround[PassAroundContent.ALL], area, $"All tags for {area.Key}.");
+            //WritePowershellLines(passAround[PassAroundContent.ALL_DELETE], area,
+            //    $"All tags for {area.Key}, that is marked for deletion.");
         }
 
         private static void WritePercentages(

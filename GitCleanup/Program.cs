@@ -6,6 +6,7 @@ namespace GitCleanup
     internal class Program
     {
         public const string GIT_FETCH_ALL = @"git fetch --all";
+        public const string GIT_PULL = @"git pull";
 
         private const bool SHOULD_ALLOW_DELETE = false;
         private const bool SHOULD_CREATE_PULL_REQUEST = false;
