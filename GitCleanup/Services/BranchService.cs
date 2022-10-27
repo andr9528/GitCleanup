@@ -15,8 +15,28 @@ namespace GitCleanup.Services
 
         private readonly IEnumerable<(Area Area, Regex Pattern)> branchPatterns = new List<(Area Area, Regex Pattern)>
         {
-            (Area.ACTION, new Regex("delete")),
-            (Area.ACTION, new Regex("develop")),
+            (Area.GATEWAY_INEWS, new Regex(@"\/feat\/")),
+            (Area.GATEWAY_INEWS, new Regex(@"\/fix\/")),
+            (Area.GATEWAY_INEWS, new Regex(@"\/SOF-")),
+            (Area.BLUEPRINTS, new Regex(@"\/feat\/")),
+            (Area.BLUEPRINTS, new Regex(@"\/test\/")),
+            (Area.BLUEPRINTS, new Regex(@"\/chore\/")),
+            (Area.BLUEPRINTS, new Regex(@"\/fix\/")),
+            (Area.BLUEPRINTS, new Regex(@"\/SOF-")),
+            (Area.CORE, new Regex(@"\/feat\/")),
+            (Area.CORE, new Regex(@"\/feature\/")),
+            (Area.CORE, new Regex(@"\/fix\/")),
+            (Area.CORE, new Regex(@"\/contribute\/")),
+            (Area.CORE, new Regex(@"\/dist\/")),
+            (Area.CORE, new Regex(@"\/test\/")),
+            (Area.CORE, new Regex(@"\/refactor\/")),
+            (Area.CORE, new Regex(@"\/SOF-")),
+            (Area.TSR, new Regex(@"\/feat\/")),
+            (Area.TSR, new Regex(@"\/feature\/")),
+            (Area.TSR, new Regex(@"\/fix\/")),
+            (Area.TSR, new Regex(@"\/test\/")),
+            (Area.TSR, new Regex(@"\/hotfix\/")),
+            (Area.TSR, new Regex(@"\/contribute\/")),
         };
 
         private readonly bool shouldAllowDelete;

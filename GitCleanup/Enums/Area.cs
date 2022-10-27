@@ -2,6 +2,9 @@
 {
     public enum Area
     {
-        ACTION,
+        CORE,
+        GATEWAY_INEWS,
+        BLUEPRINTS,
+        TSR,
     }
 }
