@@ -49,7 +49,7 @@ namespace GitCleanup.Services
             var errors = shell.Streams.Error.ReadAll();
 
             foreach (ErrorRecord error in errors)
-                Console.WriteLine($"ERROR: {error}");
+                Console.WriteLine($"ERROR: {error}|{error.Exception}");
         }
     }
 }

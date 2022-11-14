@@ -8,11 +8,13 @@ namespace GitCleanup.Services
     public class TagService : BaseService
     {
         private const string GIT_GET_ALL_TAGS =
-            "git for-each-ref --sort=committerdate --format '%(refname)|%(creatordate:iso8601)|%(creator)' refs/tags";
+            "git for-each-ref --sort=committerdate --format '%(refname)|%(committerdate:iso8601)|%(creator)' refs/tags";
 
-        private const string GIT_DELETE_TAGS_BASE = @"git push origin ";
+        private const string GIT_DELETE_TAGS_REMOTE_BASE = @"git push origin ";
+        private const string GIT_DELETE_TAGS_LOCAL_BASE = @"git tag -d ";
 
         private readonly bool shouldAllowDelete;
+        private readonly bool shouldDeleteOneAtATime;
 
         private readonly IEnumerable<(Area Area, Regex Pattern)> tagPatterns = new List<(Area Area, Regex Pattern)>
         {
@@ -27,9 +29,10 @@ namespace GitCleanup.Services
             (Area.TSR, new Regex(@"v\d{8}")),
         };
 
-        public TagService(bool shouldAllowDelete)
+        public TagService(bool shouldAllowDelete, bool shouldDeleteOneAtATime)
         {
             this.shouldAllowDelete = shouldAllowDelete;
+            this.shouldDeleteOneAtATime = shouldDeleteOneAtATime;
         }
 
         public void WriteTags(Dictionary<Area, string> areas)
@@ -50,13 +53,18 @@ namespace GitCleanup.Services
 
         private void BuildDeleteTagsCommand(PowerShell shell, KeyValuePair<Area, string> area, IEnumerable<string> tags)
         {
-            var builder = new StringBuilder(GIT_DELETE_TAGS_BASE);
+            var remote = new StringBuilder(GIT_DELETE_TAGS_REMOTE_BASE);
+            var local = new StringBuilder(GIT_DELETE_TAGS_LOCAL_BASE);
             foreach (string name in tags)
-                builder.Append($":{name} ");
+            {
+                remote.Append($":{name} ");
+                local.Append($"{name[10..]} ");
+            }
 
             shell.Commands.Clear();
             shell.AddScript($"cd {area.Value}");
-            shell.AddScript(builder.ToString());
+            shell.AddScript(remote.ToString());
+            shell.AddScript(local.ToString());
         }
 
         private void BuildGetTagsCommand(PowerShell shell, KeyValuePair<Area, string> area)
@@ -64,6 +72,7 @@ namespace GitCleanup.Services
             shell.AddScript($"cd {area.Value}");
             shell.AddScript($"{Program.GIT_FETCH_ALL}");
             shell.AddScript($"{Program.GIT_PULL}");
+            shell.AddScript($"{Program.GIT_GARBAGE_COLLECT}");
             shell.AddScript($"{GIT_GET_ALL_TAGS}");
         }
 
@@ -74,11 +83,27 @@ namespace GitCleanup.Services
                 .Select(raw => raw.ImmediateBaseObject.ToString().Split('|')[0]);
             using var shell = PowerShell.Create();
 
-            BuildDeleteTagsCommand(shell, area, toDelete);
+            string[] enumerated = toDelete.ToArray();
+            if (!enumerated.Any()) return;
 
-            var result = RunPSScript(shell, false);
-            foreach (string deleted in toDelete)
-                WritePowershellLines(result, area, $"Deleted: {deleted[10..]}", false);
+            if (shouldDeleteOneAtATime)
+            {
+                foreach (string deleted in enumerated)
+                {
+                    BuildDeleteTagsCommand(shell, area, new [] {deleted,});
+                    var result = RunPSScript(shell, false);
+                    WritePowershellLines(result, area, $"Deleted: {deleted[10..]}", false);
+
+                }
+            }
+            else
+            {
+                BuildDeleteTagsCommand(shell, area, enumerated);
+                _ = RunPSScript(shell, false);
+
+                foreach (string deleted in enumerated)
+                    WritePowershellLines(new List<PSObject>(), area, $"Deleted: {deleted[10..]}", false);
+            }
         }
 
         private void ProcessBranches(

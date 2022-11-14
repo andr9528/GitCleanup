@@ -8,10 +8,11 @@ namespace GitCleanup.Services
     public class BranchService : BaseService
     {
         private const string GIT_GET_ALL_REMOTE_BRANCHES =
-            @"git for-each-ref --sort=committerdate --format '%(refname)|%(creatordate:iso8601)|%(creator)' refs/remotes/origin";
+            @"git for-each-ref --sort=committerdate --format '%(refname)|%(committerdate:iso8601)|%(creator)' refs/remotes/origin";
 
         private const string GIT_GET_ALL_REMOTE_BRANCHES_WITH_UNMERGED = @"git branch -r --no-merged";
         private const string GIT_DELETE_REMOTE_BRANCH_BASE = @"git push origin --delete ";
+        private const string GIT_DELETE_LOCAL_BRANCH_BASE = @"git branch --delete ";
 
         private readonly IEnumerable<(Area Area, Regex Pattern)> branchPatterns = new List<(Area Area, Regex Pattern)>
         {
@@ -41,10 +42,12 @@ namespace GitCleanup.Services
 
         private readonly bool shouldAllowDelete;
         private readonly bool shouldCreatePullRequests;
+        private readonly bool shouldDeleteOneAtATime;
 
-        public BranchService(bool shouldAllowDelete, bool shouldCreatePullRequests)
+        public BranchService(bool shouldAllowDelete, bool shouldDeleteOneAtATime, bool shouldCreatePullRequests)
         {
             this.shouldAllowDelete = shouldAllowDelete;
+            this.shouldDeleteOneAtATime = shouldDeleteOneAtATime;
             this.shouldCreatePullRequests = shouldCreatePullRequests;
         }
 
@@ -67,13 +70,17 @@ namespace GitCleanup.Services
         private void BuildDeleteBranchCommand(
             PowerShell shell, KeyValuePair<Area, string> area, IEnumerable<string> names)
         {
-            var builder = new StringBuilder(GIT_DELETE_REMOTE_BRANCH_BASE);
+            var remote = new StringBuilder(GIT_DELETE_REMOTE_BRANCH_BASE);
+            var local = new StringBuilder(GIT_DELETE_LOCAL_BRANCH_BASE);
             foreach (string name in names)
-                builder.Append($"{name} ");
+            {
+                remote.Append($"{name} ");
+                local.Append($"{name} ");
+            }
 
             shell.Commands.Clear();
             shell.AddScript($"cd {area.Value}");
-            shell.AddScript(builder.ToString());
+            shell.AddScript(remote.ToString());
         }
 
         private void BuildGetBranchesCommand(PowerShell shell, KeyValuePair<Area, string> area)
@@ -82,6 +89,7 @@ namespace GitCleanup.Services
             shell.AddScript($"cd {area.Value}");
             shell.AddScript($"{Program.GIT_FETCH_ALL}");
             shell.AddScript($"{Program.GIT_PULL}");
+            shell.AddScript($"{Program.GIT_GARBAGE_COLLECT}");
             shell.AddScript($"{GIT_GET_ALL_REMOTE_BRANCHES}");
         }
 
@@ -91,6 +99,7 @@ namespace GitCleanup.Services
             shell.AddScript($"cd {area.Value}");
             shell.AddScript($"{Program.GIT_FETCH_ALL}");
             shell.AddScript($"{Program.GIT_PULL}");
+            shell.AddScript($"{Program.GIT_GARBAGE_COLLECT}");
             shell.AddScript($"{GIT_GET_ALL_REMOTE_BRANCHES_WITH_UNMERGED}");
         }
 
@@ -112,13 +121,28 @@ namespace GitCleanup.Services
                 string name = refName[20..];
                 return name;
             });
+            string[] enumerated = toDelete.ToArray();
+            if (!enumerated.Any()) return;
+
             using var shell = PowerShell.Create();
 
-            BuildDeleteBranchCommand(shell, area, toDelete);
-            var result = RunPSScript(shell, false);
+            if (shouldDeleteOneAtATime)
+            {
+                foreach (string deleted in enumerated)
+                {
+                    BuildDeleteBranchCommand(shell, area, new[] {deleted,});
+                    var result = RunPSScript(shell, false);
+                    WritePowershellLines(result, area, $"Deleted: {deleted}", false);
+                }
+            }
+            else
+            {
+                BuildDeleteBranchCommand(shell, area, enumerated);
+                var result = RunPSScript(shell, false);
 
-            foreach (string deleted in toDelete)
-                WritePowershellLines(result, area, $"Deleted: {deleted}", false);
+                foreach (string deleted in enumerated)
+                    WritePowershellLines(result, area, $"Deleted: {deleted}", false);
+            }
         }
 
         private void ProcessBranches(

@@ -5,10 +5,12 @@ namespace GitCleanup
 {
     internal class Program
     {
-        public const string GIT_FETCH_ALL = @"git fetch --all";
+        public const string GIT_FETCH_ALL = @"git fetch --prune";
         public const string GIT_PULL = @"git pull";
+        public const string GIT_GARBAGE_COLLECT = @"git gc --auto";
 
         private const bool SHOULD_ALLOW_DELETE = false;
+        private const bool SHOULD_DELETE_ONE_AT_A_TIME = false;
         private const bool SHOULD_CREATE_PULL_REQUEST = false;
 
         private readonly Dictionary<Area, string> areas = new()
@@ -36,8 +38,8 @@ namespace GitCleanup
 
         private void Run()
         {
-            var tag = new TagService(SHOULD_ALLOW_DELETE);
-            var branch = new BranchService(SHOULD_ALLOW_DELETE, SHOULD_CREATE_PULL_REQUEST);
+            var tag = new TagService(SHOULD_ALLOW_DELETE, SHOULD_DELETE_ONE_AT_A_TIME);
+            var branch = new BranchService(SHOULD_ALLOW_DELETE, SHOULD_DELETE_ONE_AT_A_TIME, SHOULD_CREATE_PULL_REQUEST);
 
             tag.WriteTags(areas);
             branch.WriteBranches(areas);
